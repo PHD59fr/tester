@@ -2,7 +2,11 @@ module tester
 
 go 1.20
 
-require github.com/fatih/color v1.15.0
+require (
+	github.com/fatih/color v1.15.0
+	github.com/juju/errors v1.0.0
+	gopkg.in/yaml.v2 v2.4.0
+)
 
 require (
 	github.com/mattn/go-colorable v0.1.13 // indirect

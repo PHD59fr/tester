@@ -1,0 +1,27 @@
+endpoints:
+  - name: "Test Post product"
+    url: "https://dummyjson.com/product/add"
+    method: POST
+    headers:
+      User-Agent: "Mozilla/5.0"
+    body:
+      kikou: "test"
+    expectedStatus: 200
+    responseVariables:
+      id: "id"
+
+  - name: "Test json responseVariables"
+    url: "https://dummyjson.com/product/{{.id}}"
+    method: GET
+    headers:
+      User-Agent: "Mozilla/5.0"
+    expectedStatus: 404
+    expectedResponse:
+      message: "Product with id '101' not found"
+
+  - name: "Test ip"
+    url: "https://ipaddr.ovh"
+    method: GET
+    headers:
+      User-Agent: "Mozilla/5.0"
+    expectedStatus: 200

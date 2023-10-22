@@ -4,71 +4,77 @@ This is a simple command-line tool for testing API calls in different environmen
 
 ## Features
 
-- Load API test configurations from a JSON file.
+- Load API test scenario file from a YAML file.
 - Send HTTP requests to specified endpoints.
 - Validate response codes and expected JSON responses.
 
 ## Getting Started
 
 ### Quick start
-Run the tool with a test configuration file:
+Run the tool with a test scenario file:
 
 ```shell
-./tester -testfile sample.json
+./tester -testFile sample.yaml
 ```
 
 ## Usage
 
 To use the tester, follow these steps:
 
-1. Create a JSON configuration file specifying the API endpoints you want to test. See `example-config.json` for a sample configuration format.
+1. Create a YAML configuration file specifying the API endpoints you want to test. See `sample.yaml` for a sample format.
 
-2. Run the tool with the `-testfile` flag to specify the configuration file:
+2. Run the tool with the `-testFile` flag to specify the test scenario file:
 
 ```shell
-./tester -testfile your-config-file.json
+./tester -testFile your-config-file.yaml -details
 ```
 
 3. The tool will send HTTP requests to the specified endpoints and report the results.
 
-## Configuration File
+## Test Scenario Configuration (YAML)
 
-The configuration file should contain an array of test cases, each specifying the following:
+The test scenario file should contain an array of test cases, each specifying the following:
 
 - `name`: A descriptive name for the test case.
 - `url`: The API endpoint URL.
-- `method`: HTTP request method (e.g., GET, POST).
-- `headers`: Key-value pairs of HTTP headers.
-- `body`: Request body as a JSON object.
+- `method`: HTTP request method (e.g., GET, POST, PUT, DELETE).
+- `headers`: Key-value pairs of HTTP headers (Optional field).
+- `body`: Request body as a map (usually for JSON requests, Optional field).
 - `expectedStatus`: The expected HTTP response status code.
-- `expectedResponse`: The expected JSON response (can be `null` if not required).
+- `expectedResponse`: The expected JSON response data (Optional field).
+- `responseVariables`: A map of response variables to capture from the response and use in subsequent requests (Optional field).
 
-```json
-{
-  "endpoints": [
-    {
-      "name": "Test json",
-      "url": "https://jsonplaceholder.typicode.com/todos/1",
-      "method": "GET",
-      "headers": {"User-Agent":  "Mozilla/5.0"},
-      "body": {},
-      "expectedStatus": 200,
-      "expectedResponse": {"userId": 1, "id": 1,"title":"delectus aut autem","completed": false}
-    },
-    {
-      "name": "Test ip",
-      "url": "https://ipaddr.ovh",
-      "method": "GET",
-      "headers": {"Accept-Encoding": "gzip, deflate, br"},
-      "body": {},
-      "expectedStatus": 200
-    }
-    /// Your test here !
-  ]
-}
+Example YAML format:
+```yaml
+endpoints:
+  - name: "Test Post product"
+    url: "https://dummyjson.com/product/add"
+    method: POST
+    headers:
+      User-Agent: "Mozilla/5.0"
+    body:
+      kikou: "test"
+    expectedStatus: 200
+    responseVariables:
+      id: "id"
 
+  - name: "Test json responseVariables"
+    url: "https://dummyjson.com/product/{{.id}}"
+    method: GET
+    headers:
+      User-Agent: "Mozilla/5.0"
+    expectedStatus: 404
+    expectedResponse:
+      message: "Product with id '101' not found"
+
+  - name: "Test ip"
+    url: "https://ipaddr.ovh"
+    method: GET
+    headers:
+      User-Agent: "Mozilla/5.0"
+    expectedStatus: 200
 ```
 
 ## Contributing
 
-Contributions to this project are welcome. If you encounter any issues, have suggestions, or want to add features, please open an issue or create a pull request.
+Contributions to this project are welcome. If you encounter any issues, have suggestions, or want to add features, please open an issue or create a pull request. Your contributions will help improve this automation tool for testing API scenarios.
