@@ -118,12 +118,23 @@ func processEndpoint(endpoint *EndpointTest, showDetails *bool, responseVariable
 		return errors.Annotate(err, "reading the endpoint's response")
 	}
 
-	if endpoint.ResponseVariables != nil && endpoint.ExpectedResponse != nil {
+	if endpoint.ResponseVariables != nil {
 		var responseJSON map[string]interface{}
 		if err := yaml.Unmarshal(responseBody, &responseJSON); err != nil {
 			return errors.Annotate(err, "decoding the YAML response")
 		}
-		if err := checkExpectedResponse(responseJSON, endpoint.ExpectedResponse); err != nil {
+
+		for responseVar, varName := range endpoint.ResponseVariables {
+			value, exists := responseJSON[varName]
+			if !exists {
+				return errors.New(fmt.Sprintf("response variable '%s' not found in the response", varName))
+			}
+			responseVariables[responseVar] = value
+		}
+	}
+
+	if endpoint.ExpectedResponse != nil {
+		if err := checkExpectedResponse(responseBody, endpoint.ExpectedResponse); err != nil {
 			return err
 		}
 	}
@@ -205,15 +216,20 @@ func replaceVariables(input string, variables map[string]interface{}) string {
 	return output.String()
 }
 
-func checkExpectedResponse(actualResponse, expectedResponse map[string]interface{}) error {
+func checkExpectedResponse(actualResponse []byte, expectedResponse map[string]interface{}) error {
+	var responseJSON map[string]interface{}
+	if err := yaml.Unmarshal(actualResponse, &responseJSON); err != nil {
+		return errors.Annotate(err, "decoding the YAML response")
+	}
+
 	for key, expectedValue := range expectedResponse {
-		actualValue, exists := actualResponse[key]
+		actualValue, exists := responseJSON[key]
 		if !exists {
-			return errors.NotFoundf(`response key '%s' not found in the actual response`, key)
+			return errors.New(fmt.Sprintf("response key '%s' not found in the actual response", key))
 		}
 
 		if fmt.Sprintf("%v", actualValue) != fmt.Sprintf("%v", expectedValue) {
-			return errors.New(fmt.Sprintf(`response key '%s' does not match the expected value. Expected: %v, Actual: %v`, key, expectedValue, actualValue))
+			return errors.New(fmt.Sprintf("response key '%s' does not match the expected value. Expected: %v, Actual: %v", key, expectedValue, actualValue))
 		}
 	}
 	return nil
