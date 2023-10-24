@@ -6,11 +6,11 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"mime/multipart"
 	"net/http"
 	"net/http/httputil"
 	"os"
 	"strings"
-	"syscall"
 	"text/template"
 
 	"github.com/fatih/color"
@@ -24,6 +24,8 @@ type EndpointTest struct {
 	Method            string                 `yaml:"method"`
 	Headers           map[string]string      `yaml:"headers"`
 	Body              map[string]interface{} `yaml:"body"`
+	Multipart         bool                   `yaml:"multipart"`
+	MultipartFields   map[string]interface{} `yaml:"multipartFields"`
 	ExpectedStatus    int                    `yaml:"expectedStatus"`
 	ExpectedResponse  map[string]interface{} `yaml:"expectedResponse"`
 	ResponseVariables map[string]string      `yaml:"responseVariables"`
@@ -56,7 +58,7 @@ func main() {
 				printTestSummary(passCount, failCount, len(testScenario.Endpoints))
 				fmt.Print("The other tests are ignored because you have specified the ignoreFail flag as false\n")
 
-				syscall.Exit(2)
+				os.Exit(2)
 			}
 		} else {
 			color.Green("[PASS] [%s]\n", endpoint.Name)
@@ -156,6 +158,43 @@ func replaceVariablesInEndpoint(endpoint *EndpointTest, responseVariables map[st
 }
 
 func createRequest(endpoint *EndpointTest) (*http.Request, error) {
+	if endpoint.Multipart {
+		body := &bytes.Buffer{}
+		writer := multipart.NewWriter(body)
+
+		for fieldName, fieldValue := range endpoint.MultipartFields {
+			value, ok := fieldValue.(string)
+			if !ok {
+				return nil, errors.New("Multipart field value must be a string")
+			}
+
+			part, err := writer.CreateFormField(fieldName)
+			if err != nil {
+				return nil, err
+			}
+
+			_, err = part.Write([]byte(value))
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		contentType := writer.FormDataContentType()
+		_ = writer.Close()
+
+		request, err := http.NewRequest(endpoint.Method, endpoint.URL, body)
+		if err != nil {
+			return nil, err
+		}
+		request.Header.Set("Content-Type", contentType)
+
+		for key, value := range endpoint.Headers {
+			request.Header.Set(key, value)
+		}
+
+		return request, nil
+	}
+
 	endpointBody, err := json.Marshal(endpoint.Body)
 	if err != nil {
 		return nil, err
