@@ -10,7 +10,7 @@ This is a simple command-line tool for testing API calls in different environmen
 
 ## Getting Started
 
-### Quick start
+### Quick Start
 Run the tool with a test scenario file:
 
 ```shell
@@ -18,6 +18,18 @@ Run the tool with a test scenario file:
 ```
 
 ## Usage
+
+Command-line options:
+
+```shell
+./tester -h
+  -details
+        Display request and response details
+  -stopOnFailure
+        Specify whether to display request and response details in case of failure
+  -testFile string
+        Specify the test scenario file
+```
 
 To use the tester, follow these steps:
 
@@ -38,16 +50,27 @@ The test scenario file should contain an array of test cases, each specifying th
 - `name`: A descriptive name for the test case.
 - `url`: The API endpoint URL.
 - `method`: HTTP request method (e.g., GET, POST, PUT, DELETE).
-- `headers`: Key-value pairs of HTTP headers (Optional field).
-- `body`: Request body as a map (usually for JSON requests, Optional field).
+- `headers`: Key-value pairs of HTTP headers (optional).
+- `body`: Request body, which can contain various types of data (optional).
+- `multipartFields`: Multipart fields for requests with files (optional).
 - `expectedStatus`: The expected HTTP response status code.
-- `expectedResponse`: The expected JSON response data (Optional field).
-- `responseVariables`: A map of response variables to capture from the response and use in subsequent requests (Optional field).
+- `expectedResponse`: The expected response data, which can be in different formats (optional).
+- `responseVariables`: A map of response variables to capture from the response and use in subsequent requests (optional).
 
-Example YAML format:
+**Example YAML format**:
+
 ```yaml
 endpoints:
-  - name: "Test Post product"
+  - name: "Test Multipart"
+    url: "https://dummyjson.com/product/add"
+    method: POST
+    headers:
+      User-Agent: "Mozilla/5.0"
+    multipartFields:
+      file: "@test.png"
+    expectedStatus: 200
+
+  - name: "Test Post"
     url: "https://dummyjson.com/product/add"
     method: POST
     headers:
@@ -58,7 +81,7 @@ endpoints:
     responseVariables:
       id: "id"
 
-  - name: "Test json responseVariables"
+  - name: "Test responseVariables and return 404"
     url: "https://dummyjson.com/product/{{.id}}"
     method: GET
     headers:
@@ -67,7 +90,7 @@ endpoints:
     expectedResponse:
       message: "Product with id '101' not found"
 
-  - name: "Test ip"
+  - name: "Test Get simple"
     url: "https://ipaddr.ovh"
     method: GET
     headers:
