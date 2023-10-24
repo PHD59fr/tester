@@ -24,7 +24,6 @@ type EndpointTest struct {
 	Method            string                 `yaml:"method"`
 	Headers           map[string]string      `yaml:"headers"`
 	Body              map[string]interface{} `yaml:"body"`
-	Multipart         bool                   `yaml:"multipart"`
 	MultipartFields   map[string]interface{} `yaml:"multipartFields"`
 	ExpectedStatus    int                    `yaml:"expectedStatus"`
 	ExpectedResponse  map[string]interface{} `yaml:"expectedResponse"`
@@ -38,7 +37,7 @@ type TestScenario struct {
 func main() {
 	testScenarioFile := flag.String("testFile", "", "Specify the test scenario file")
 	showDetails := flag.Bool("details", false, "Display request and response details")
-	ignoreFail := flag.Bool("ignoreFail", true, "Specify whether to display request and response details in case of failure")
+	stopOnFailure := flag.Bool("stopOnFailure", false, "Specify whether to display request and response details in case of failure")
 	flag.Parse()
 
 	testScenario, err := loadTestScenario(*testScenarioFile)
@@ -54,10 +53,9 @@ func main() {
 		if err := processEndpoint(&endpoint, showDetails, responseVariables); err != nil {
 			color.Red("[FAIL] [%s] %v\n", endpoint.Name, err)
 			failCount++
-			if !*ignoreFail {
+			if *stopOnFailure {
 				printTestSummary(passCount, failCount, len(testScenario.Endpoints))
-				fmt.Print("The other tests are ignored because you have specified the ignoreFail flag as false\n")
-
+				fmt.Print("The tests afterwards were not executed because you specified the 'stopOnFailure' argument.\n")
 				os.Exit(2)
 			}
 		} else {
@@ -158,7 +156,7 @@ func replaceVariablesInEndpoint(endpoint *EndpointTest, responseVariables map[st
 }
 
 func createRequest(endpoint *EndpointTest) (*http.Request, error) {
-	if endpoint.Multipart {
+	if len(endpoint.MultipartFields) > 0 {
 		body := &bytes.Buffer{}
 		writer := multipart.NewWriter(body)
 
@@ -222,6 +220,7 @@ func dumpRequest(request *http.Request) error {
 		return err
 	}
 	requestDumpLines := strings.Split(string(requestDump), "\n")
+	fmt.Printf("\n")
 	for _, line := range requestDumpLines {
 		color.Cyan("> %s", line)
 	}
@@ -234,6 +233,7 @@ func dumpResponse(response *http.Response) error {
 		return err
 	}
 	responseDumpLines := strings.Split(string(responseDump), "\n")
+	fmt.Printf("\n")
 	for _, line := range responseDumpLines {
 		color.Cyan("< %s", line)
 	}

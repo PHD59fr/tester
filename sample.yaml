@@ -1,5 +1,14 @@
 endpoints:
-  - name: "Test Post product"
+  - name: "Test Multipart"
+    url: "https://dummyjson.com/product/add"
+    method: POST
+    headers:
+      User-Agent: "Mozilla/5.0"
+    multipartFields:
+      file: "@test.png"
+    expectedStatus: 200
+
+  - name: "Test Post"
     url: "https://dummyjson.com/product/add"
     method: POST
     headers:
@@ -10,7 +19,7 @@ endpoints:
     responseVariables:
       id: "id"
 
-  - name: "Test json responseVariables"
+  - name: "Test responseVariables and return 404"
     url: "https://dummyjson.com/product/{{.id}}"
     method: GET
     headers:
@@ -19,7 +28,7 @@ endpoints:
     expectedResponse:
       message: "Product with id '101' not found"
 
-  - name: "Test ip"
+  - name: "Test Get simple"
     url: "https://ipaddr.ovh"
     method: GET
     headers:
