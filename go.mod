@@ -1,4 +1,4 @@
-module tester
+module github.com/PHD59fr/tester
 
 go 1.20
 
