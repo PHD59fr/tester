@@ -153,6 +153,19 @@ func replaceVariablesInEndpoint(endpoint *EndpointTest, responseVariables map[st
 	for key, value := range endpoint.Headers {
 		endpoint.Headers[key] = replaceVariables(value, responseVariables)
 	}
+	deepReplace(endpoint.Body, responseVariables)
+}
+
+func deepReplace(m map[string]interface{}, responseVariables map[string]interface{}) map[string]interface{} {
+	for key, value := range m {
+		switch value.(type) {
+		case map[string]interface{}:
+			m[key] = deepReplace(value.(map[string]interface{}), responseVariables)
+		case string:
+			m[key] = replaceVariables(value.(string), responseVariables)
+		}
+	}
+	return m
 }
 
 func createRequest(endpoint *EndpointTest) (*http.Request, error) {
