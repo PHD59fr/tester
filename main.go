@@ -15,7 +15,7 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/juju/errors"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 type EndpointTest struct {
