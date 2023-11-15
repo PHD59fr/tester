@@ -134,7 +134,7 @@ func processEndpoint(endpoint *EndpointTest, showDetails *bool, responseVariable
 	}
 
 	if endpoint.ExpectedResponse != nil {
-		if err := checkExpectedResponse(responseBody, endpoint.ExpectedResponse); err != nil {
+		if err := checkExpectedResponse(responseBody, deepReplace(endpoint.ExpectedResponse, responseVariables)); err != nil {
 			return err
 		}
 	}
