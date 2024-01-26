@@ -154,6 +154,7 @@ func replaceVariablesInEndpoint(endpoint *EndpointTest, responseVariables map[st
 		endpoint.Headers[key] = replaceVariables(value, responseVariables)
 	}
 	endpoint.Body = deepReplace(endpoint.Body, responseVariables)
+	endpoint.MultipartFields = deepReplace(endpoint.MultipartFields, responseVariables)
 }
 
 func deepReplace(m map[string]interface{}, responseVariables map[string]interface{}) map[string]interface{} {
